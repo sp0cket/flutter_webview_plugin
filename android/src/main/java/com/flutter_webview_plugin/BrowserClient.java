@@ -108,6 +108,11 @@ public class BrowserClient extends WebViewClient {
         FlutterWebviewPlugin.channel.invokeMethod("onHttpError", data);
     }
 
+    @Override
+    public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+        handler.proceed();
+    }
+    
     private boolean checkInvalidUrl(String url) {
         if (invalidUrlPattern == null) {
             return false;
