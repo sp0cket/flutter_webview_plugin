@@ -1,9 +1,11 @@
 package com.flutter_webview_plugin;
 
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.Build;
+import android.text.TextUtils;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -63,33 +65,73 @@ public class BrowserClient extends WebViewClient {
 
     }
 
+
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-        // returning true causes the current WebView to abort loading the URL,
-        // while returning false causes the WebView to continue loading the URL as usual.
         String url = request.getUrl().toString();
-        boolean isInvalid = checkInvalidUrl(url);
-        Map<String, Object> data = new HashMap<>();
-        data.put("url", url);
-        data.put("type", isInvalid ? "abortLoad" : "shouldStart");
-
-        FlutterWebviewPlugin.channel.invokeMethod("onState", data);
-        return isInvalid;
+        try {
+            if (!TextUtils.isEmpty(url)) {
+                // 处理自定义scheme协议
+                if (!url.startsWith("http") && !url.startsWith("https")) {
+                    try {
+                        final Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        intent.addCategory("android.intent.category.BROWSABLE");
+                        intent.setComponent(null);
+                        view.getContext().startActivity(intent);
+//                            startActivity(intent);
+                        return true;
+                    } catch (Exception e) {
+                        // 没有安装的情况
+                        e.printStackTrace();
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (url.contains("http") || url.contains("https")) {
+            // 返回值是true的时候控制去WebView打开，为false调用系统浏览器或第三方浏览器
+            view.loadUrl(url);
+            return true;
+        }
+        return super.shouldOverrideUrlLoading(view, request);
     }
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
-        // returning true causes the current WebView to abort loading the URL,
-        // while returning false causes the WebView to continue loading the URL as usual.
-        boolean isInvalid = checkInvalidUrl(url);
-        Map<String, Object> data = new HashMap<>();
-        data.put("url", url);
-        data.put("type", isInvalid ? "abortLoad" : "shouldStart");
-
-        FlutterWebviewPlugin.channel.invokeMethod("onState", data);
-        return isInvalid;
+        try {
+            if (!TextUtils.isEmpty(url)) {
+                // 处理自定义scheme协议
+                if (!url.startsWith("http") && !url.startsWith("https")) {
+                    try {
+                        final Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        intent.addCategory("android.intent.category.BROWSABLE");
+                        intent.setComponent(null);
+                        view.getContext().startActivity(intent);
+//                            startActivity(intent);
+                        return true;
+                    } catch (Exception e) {
+                        // 没有安装的情况
+                        e.printStackTrace();
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (url.contains("http") || url.contains("https")) {
+            // 返回值是true的时候控制去WebView打开，为false调用系统浏览器或第三方浏览器
+            view.loadUrl(url);
+            return true;
+        }
+        return super.shouldOverrideUrlLoading(view, url);
     }
+
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
