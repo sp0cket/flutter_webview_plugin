@@ -41,9 +41,9 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
         [self closeWebView];
         result(nil);
     } else if ([@"eval" isEqualToString:call.method]) {
-        [self evalJavascript:call completionHandler:^(NSString * response) {
-            result(response);
-        }];
+//        [self evalJavascript:call completionHandler:^(NSString * response) {
+//            result(response);
+//        }];
     } else if ([@"resize" isEqualToString:call.method]) {
         [self resize:call];
         result(nil);
@@ -107,20 +107,20 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
         rc = self.viewController.view.bounds;
     }
 
-    self.webview = [[WKWebView alloc] initWithFrame:rc];
-    self.webview.UIDelegate = self;
-    self.webview.navigationDelegate = self;
+    self.webview = [[UIWebView alloc] initWithFrame:rc];
+//    self.webview.UIDelegate = self;
+//    self.webview.navigationDelegate = self;
     self.webview.scrollView.delegate = self;
     self.webview.hidden = [hidden boolValue];
     self.webview.scrollView.showsHorizontalScrollIndicator = [scrollBar boolValue];
     self.webview.scrollView.showsVerticalScrollIndicator = [scrollBar boolValue];
 
-    WKPreferences* preferences = [[self.webview configuration] preferences];
-    if ([withJavascript boolValue]) {
-        [preferences setJavaScriptEnabled:YES];
-    } else {
-        [preferences setJavaScriptEnabled:NO];
-    }
+//    WKPreferences* preferences = [[self.webview configuration] preferences];
+//    if ([withJavascript boolValue]) {
+//        [preferences setJavaScriptEnabled:YES];
+//    } else {
+//        [preferences setJavaScriptEnabled:NO];
+//    }
 
     _enableZoom = [withZoom boolValue];
 
@@ -152,11 +152,8 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
             NSNumber *withLocalUrl = call.arguments[@"withLocalUrl"];
             if ( [withLocalUrl boolValue]) {
                 NSURL *htmlUrl = [NSURL fileURLWithPath:url isDirectory:false];
-                if (@available(iOS 9.0, *)) {
-                    [self.webview loadFileURL:htmlUrl allowingReadAccessToURL:htmlUrl];
-                } else {
-                    @throw @"not available on version earlier than ios 9.0";
-                }
+                NSURLRequest *request = [NSURLRequest requestWithURL:htmlUrl];
+                [self.webview loadRequest:request];
             } else {
                 NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
                 NSDictionary *headers = call.arguments[@"headers"];
@@ -170,18 +167,18 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
         }
 }
 
-- (void)evalJavascript:(FlutterMethodCall*)call
-     completionHandler:(void (^_Nullable)(NSString * response))completionHandler {
-    if (self.webview != nil) {
-        NSString *code = call.arguments[@"code"];
-        [self.webview evaluateJavaScript:code
-                       completionHandler:^(id _Nullable response, NSError * _Nullable error) {
-            completionHandler([NSString stringWithFormat:@"%@", response]);
-        }];
-    } else {
-        completionHandler(nil);
-    }
-}
+//- (void)evalJavascript:(FlutterMethodCall*)call
+//     completionHandler:(void (^_Nullable)(NSString * response))completionHandler {
+//    if (self.webview != nil) {
+//        NSString *code = call.arguments[@"code"];
+//        [self.webview evaluateJavaScript:code
+//                       completionHandler:^(id _Nullable response, NSError * _Nullable error) {
+//            completionHandler([NSString stringWithFormat:@"%@", response]);
+//        }];
+//    } else {
+//        completionHandler(nil);
+//    }
+//}
 
 - (void)resize:(FlutterMethodCall*)call {
     if (self.webview != nil) {
@@ -195,7 +192,7 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
     if (self.webview != nil) {
         [self.webview stopLoading];
         [self.webview removeFromSuperview];
-        self.webview.navigationDelegate = nil;
+//        self.webview.navigationDelegate = nil;
         self.webview = nil;
 
         // manually trigger onDestroy
