@@ -3,7 +3,7 @@
 static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
 
 // UIWebViewDelegate
-@interface FlutterWebviewPlugin() <WKNavigationDelegate, UIScrollViewDelegate, WKUIDelegate> {
+@interface FlutterWebviewPlugin() <UIWebViewDelegate, WKNavigationDelegate, UIScrollViewDelegate, WKUIDelegate> {
     BOOL _enableAppScheme;
     BOOL _enableZoom;
     NSString* _invalidUrlRegex;
@@ -108,6 +108,7 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
     }
 
     self.webview = [[UIWebView alloc] initWithFrame:rc];
+    self.webview.delegate = self;
 //    self.webview.UIDelegate = self;
 //    self.webview.navigationDelegate = self;
     self.webview.scrollView.delegate = self;
@@ -167,6 +168,15 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
         }
 }
 
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType{
+    NSString* reqUrl = request.URL.absoluteString;
+    if([reqUrl hasPrefix:@"alipays://"] || [reqUrl hasPrefix:@"alipay://"]) {
+      [[UIApplication sharedApplication]openURL:[NSURL URLWithString:reqUrl]];
+    }else if([reqUrl hasPrefix:@"weixin://"]) {
+      [[UIApplication sharedApplication]openURL:[NSURL URLWithString:reqUrl]];      //bSucc是否成功调起微信
+    }
+    return YES;
+}
 //- (void)evalJavascript:(FlutterMethodCall*)call
 //     completionHandler:(void (^_Nullable)(NSString * response))completionHandler {
 //    if (self.webview != nil) {
